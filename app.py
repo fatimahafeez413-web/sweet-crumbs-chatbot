@@ -126,6 +126,11 @@ HERO = f"""<div class="hero">
 st.markdown(HERO, unsafe_allow_html=True)
 
 
+def safe_text(text):
+    """Streamlit treats $...$ as math. Escape the $ so prices such as $6 show correctly."""
+    return text.replace("$", "\\$")
+
+
 def get_api_key():
     """Look for the key in Streamlit secrets first, then in an environment variable."""
     try:
@@ -219,14 +224,14 @@ if question:
 for message in st.session_state.messages:
     avatar = "🧁" if message["role"] == "assistant" else "🙂"
     with st.chat_message(message["role"], avatar=avatar):
-        st.markdown(message["content"])
+        st.markdown(safe_text(message["content"]))
         if show_how and message.get("sources"):
             show_sources(message["sources"], message["search_query"])
 
 # ---------- Handle a new question ----------
 if question:
     with st.chat_message("user", avatar="🙂"):
-        st.markdown(question)
+        st.markdown(safe_text(question))
 
     if st.session_state.questions_asked >= MAX_QUESTIONS:
         with st.chat_message("assistant", avatar="🧁"):
@@ -240,7 +245,7 @@ if question:
                 with st.spinner("Thinking..."):
                     bot = load_bot(api_key)
                     result = bot.ask(question, history)
-                st.markdown(result.text)
+                st.markdown(safe_text(result.text))
                 if show_how:
                     show_sources(result.sources, result.search_query)
                 st.session_state.messages.append({"role": "user", "content": question})
